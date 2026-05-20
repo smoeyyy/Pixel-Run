@@ -1,0 +1,31 @@
+{
+    "activeFile": "",
+    "expandedProjectPaths": [
+    ],
+    "file.lastUsedOpenFilter": "All Files (*)",
+    "fileStates": {
+        "pixel-platformer.tsx": {
+            "scaleInDock": 1
+        },
+        "tilemap-backgrounds.tsx": {
+            "scaleInDock": 1
+        }
+    },
+    "last.exportedFilePath": "C:/Users/willi/Desktop/CMPM120/Pixel-Run/assets",
+    "map.height": 30,
+    "map.lastUsedExportFilter": "JSON map files (*.tmj *.json)",
+    "map.tileHeight": 18,
+    "map.tileWidth": 18,
+    "map.width": 200,
+    "openFiles": [
+    ],
+    "project": "platformer-level-farm.tiled-project",
+    "property.type": "bool",
+    "recentFiles": [
+    ],
+    "tileset.lastUsedFormat": "tsx",
+    "tileset.tileSize": {
+        "height": 18,
+        "width": 18
+    }
+}
