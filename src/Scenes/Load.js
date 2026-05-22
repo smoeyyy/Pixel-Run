@@ -16,6 +16,10 @@ class Load extends Phaser.Scene {
             frameHeight: 18
         });
         this.load.tilemapTiledJSON("platformer-level-1", "platformer-level-1.tmj");
+        this.load.spritesheet('coin', 'pumpkin.png', {
+            frameWidth: 18,
+            frameHeight: 18
+        });
     }
 
     create() {

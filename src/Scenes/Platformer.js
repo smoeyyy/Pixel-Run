@@ -16,6 +16,7 @@ class Platformer extends Phaser.Scene {
     create() {
         this.createMap();
         this.createPlayer();
+        this.createCollectibles();
         this.createControls();
         this.createAnimations();
         this.createWalkParticles();
@@ -61,19 +62,62 @@ class Platformer extends Phaser.Scene {
         this.backgroundLayer = this.map.createLayer("Background", [tilesetBackgrounds]);
         this.decorationLayer = this.map.createLayer("Decorations", [tilesetBackgrounds, tilesetTiles, tilesetFarm]);
         this.groundLayer = this.map.createLayer("Ground-n-Platformers", [tilesetTiles, tilesetFarm]);
+        this.secretLayer = this.map.createLayer("Secret-Paths", [tilesetFarm]);
 
         this.backgroundLayer.setDepth(0);
         this.decorationLayer.setDepth(1);
         this.groundLayer.setDepth(2);
+        this.secretLayer.setDepth(2);
 
-        if (!this.groundLayer) {
-            throw new Error("Tilemap ground layer not found: Ground-n-Platformers");
-        }
+        this.secretLayer.setVisible(false);
+        this.secretLayer.setCollisionByExclusion([-1]);
 
         this.groundLayer.setCollisionByProperty({ collides: true });
         this.groundLayer.setCollisionByExclusion([-1]);
 
         this.physics.world.setBounds(0, 0, this.map.widthInPixels, this.map.heightInPixels);
+    }
+
+    createCollectibles(){
+        this.collectibles = this.physics.add.staticGroup();
+        const coinObjects = this.map.getObjectLayer('Collectibles').objects;
+        coinObjects.forEach(obj => {
+            const coin = this.collectibles.create(obj.x, obj.y, 'coin', 0);
+
+            coin.setOrigin(0, 1);
+
+            coin.body.setSize(obj.width, obj.height);
+        });
+        this.physics.add.overlap(
+            this.player,
+            this.collectibles,
+            this.collectCoin,
+            null,
+            this
+        );
+        this.collectedCount = 0;
+        this.totalCoins = this.collectibles.getChildren().length;
+    }
+
+    collectCoin(player, coin) {
+        coin.destroy();
+
+        this.collectedCount++;
+
+        console.log(`Coins: ${this.collectedCount}/${this.totalCoins}`);
+
+        if (this.collectedCount === this.totalCoins) {
+            this.winGame();
+        }
+    }
+    winGame() {
+        console.log("Secret paths unlocked!");
+
+        this.secretLayer.setVisible(true);
+
+        this.physics.add.collider(this.player, this.secretLayer);
+
+        this.cameras.main.flash(300, 255, 255, 255);
     }
 
     createPlayer() {
