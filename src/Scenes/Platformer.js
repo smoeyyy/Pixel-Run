@@ -6,7 +6,7 @@ class Platformer extends Phaser.Scene {
 
     init() {
         this.ACCELERATION = 400;
-        this.DRAG = 500;    // DRAG < ACCELERATION = icy slide
+        this.DRAG = 1000;    // DRAG < ACCELERATION = icy slide
         this.physics.world.gravity.y = 1500;
         this.JUMP_VELOCITY = -600;
         this.PARTICLE_VELOCITY = 50;
@@ -17,21 +17,54 @@ class Platformer extends Phaser.Scene {
         this.createMap();
         this.createPlayer();
         this.createControls();
+        this.createAnimations();
         this.createWalkParticles();
         this.createCamera();
         this.createDebugToggle();
     }
 
+    createAnimations() {
+        if (!this.anims.exists('walk')) {
+            this.anims.create({
+                key: 'walk',
+                frames: this.anims.generateFrameNumbers('platformer_characters', { start: 0, end: 1 }),
+                frameRate: 15,
+                repeat: -1
+            });
+        }
+
+        if (!this.anims.exists('idle')) {
+            this.anims.create({
+                key: 'idle',
+                frames: [{ key: 'platformer_characters', frame: 0 }],
+                frameRate: 1,
+                repeat: -1
+            });
+        }
+
+        if (!this.anims.exists('jump')) {
+            this.anims.create({
+                key: 'jump',
+                frames: [{ key: 'platformer_characters', frame: 1 }],
+                frameRate: 1
+            });
+        }
+    }
+
     createMap() {
         this.map = this.make.tilemap({ key: "platformer-level-1" });
 
-        const tilesetTiles = this.map.addTilesetImage("pixel-platformer", "tilemap_packed");
-        const tilesetFarm = this.map.addTilesetImage("farm-expansion", "tilemap_packed");
-        const tilesetBackgrounds = this.map.addTilesetImage("pixel-platformer-backgrounds", "tilemap_packed");
+        const tilesetTiles = this.map.addTilesetImage("pixel-platformer", "pixel-platformer");
+        const tilesetFarm = this.map.addTilesetImage("farm-expansion", "farm-expansion");
+        const tilesetBackgrounds = this.map.addTilesetImage("pixel-platformer-backgrounds", "pixel-platformer-backgrounds");
 
-        this.backgroundLayer = this.map.createLayer("Background", [tilesetBackgrounds, tilesetTiles, tilesetFarm], 0, 0);
-        this.decorationLayer = this.map.createLayer("Decorations", [tilesetBackgrounds, tilesetTiles, tilesetFarm], 0, 0);
-        this.groundLayer = this.map.createLayer("Ground-n-Platformers", [tilesetBackgrounds, tilesetTiles, tilesetFarm], 0, 0);
+        this.backgroundLayer = this.map.createLayer("Background", [tilesetBackgrounds]);
+        this.decorationLayer = this.map.createLayer("Decorations", [tilesetBackgrounds, tilesetTiles, tilesetFarm]);
+        this.groundLayer = this.map.createLayer("Ground-n-Platformers", [tilesetTiles, tilesetFarm]);
+
+        this.backgroundLayer.setDepth(0);
+        this.decorationLayer.setDepth(1);
+        this.groundLayer.setDepth(2);
 
         if (!this.groundLayer) {
             throw new Error("Tilemap ground layer not found: Ground-n-Platformers");
@@ -47,8 +80,8 @@ class Platformer extends Phaser.Scene {
         const startX = 30;
         const startY = 345;
 
-        this.player = this.physics.add.sprite(startX, startY, "platformer_characters", 0);
-        this.player.setScale(this.SCALE);
+        this.player = this.physics.add.sprite(startX, startY, "platformer_characters");
+        this.player.setScale(1.5);
         this.player.setCollideWorldBounds(true);
         this.player.setDragX(this.DRAG);
         this.player.setMaxVelocity(300, 900);
@@ -56,6 +89,7 @@ class Platformer extends Phaser.Scene {
         this.player.body.setOffset(3, 1);
 
         this.physics.add.collider(this.player, this.groundLayer);
+        this.player.setDepth(10);
     }
 
     createControls() {
@@ -64,10 +98,9 @@ class Platformer extends Phaser.Scene {
     }
 
     createWalkParticles() {
-        this.walkParticles = this.add.particles("particle_smoke");
-        this.walkEmitter = this.walkParticles.createEmitter({
+        this.walkEmitter = this.add.particles(0, 0, "particle_smoke", {
             frame: [0, 1],
-            scale: { start: 0.05, end: 0.12 },
+            scale: { start: 0.15, end: 0.3 },
             speed: { min: 10, max: 50 },
             lifespan: 350,
             alpha: { start: 1, end: 0 },

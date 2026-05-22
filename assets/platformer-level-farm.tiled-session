@@ -1,10 +1,32 @@
 {
-    "activeFile": "",
+    "activeFile": "platformer-level-1.tmj",
     "expandedProjectPaths": [
+        "."
     ],
     "file.lastUsedOpenFilter": "All Files (*)",
     "fileStates": {
+        "": {
+            "scaleInDock": 1,
+            "scaleInEditor": 1
+        },
         "pixel-platformer.tsx": {
+            "scaleInDock": 1
+        },
+        "platformer-level-1.tmj": {
+            "scale": 1.5,
+            "selectedLayer": 0,
+            "viewCenter": {
+                "x": 565,
+                "y": 418
+            }
+        },
+        "platformer-level-1.tmj#farm-expansion": {
+            "scaleInDock": 1
+        },
+        "platformer-level-1.tmj#pixel-platformer": {
+            "scaleInDock": 1
+        },
+        "platformer-level-1.tmj#pixel-platformer-backgrounds": {
             "scaleInDock": 1
         },
         "tilemap-backgrounds.tsx": {
@@ -18,10 +40,12 @@
     "map.tileWidth": 18,
     "map.width": 200,
     "openFiles": [
+        "platformer-level-1.tmj"
     ],
     "project": "platformer-level-farm.tiled-project",
     "property.type": "bool",
     "recentFiles": [
+        "platformer-level-1.tmj"
     ],
     "tileset.lastUsedFormat": "tsx",
     "tileset.tileSize": {
