@@ -20,7 +20,7 @@ class Load extends Phaser.Scene {
             frameWidth: 18,
             frameHeight: 18
         });
-        this.load.image('heart', 'heart.png');
+        this.load.image('sign', 'sign.png');
     }
 
     create() {

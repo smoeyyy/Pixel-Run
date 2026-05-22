@@ -19,33 +19,79 @@ class Platformer extends Phaser.Scene {
     create() {
         this.createMap();
         this.createPlayer();
-        this.createWater();
         this.createCollectibles();
         this.createCamera();
-        this.createHealthUI();
         this.createControls();
         this.createAnimations();
         this.createWalkParticles();
-        this.createDebugToggle();
-        this.physics.add.overlap(
+        this.createSigns();
+        this.add.text(50, 150, "ARROW KEYS TO MOVE\nR TO RESTART", {
+            fontSize: '12px',
+            fill: '#000000'
+        });
+        this.physics.add.collider(
             this.player,
-            this.waterZones,
+            this.waterLayer,
             this.hitWater,
             null,
             this
         );
     }
 
-    createHealthUI() {
-        this.hearts = [];
+    createSigns() {
 
-        for (let i = 0; i < this.MAX_HEALTH; i++) {
-            const heart = this.add.image(50 + (i * 50), 40, 'heart');
-            heart.setScrollFactor(0);
-            heart.setDepth(1000);
-            heart.setScale(2.0);
-            this.hearts.push(heart);
-        }
+        this.signs = this.physics.add.staticGroup();
+
+        const signObjects = this.map.getObjectLayer('Signs').objects;
+
+        signObjects.forEach(obj => {
+
+            const sign = this.signs.create(obj.x, obj.y, 'sign');
+
+            sign.setOrigin(0, 1);
+
+            sign.body.setSize(obj.width, obj.height);
+
+            sign.message = obj.properties?.find(
+                p => p.name === 'text'
+            )?.value || '...';
+
+            sign.dialogue = this.add.text(
+                obj.x,
+                obj.y - 50,
+                sign.message,
+                {
+                    fontSize: '12px',
+                    color: '#000000',
+                    backgroundColor: '#ffffff',
+                    padding: {
+                        x: 8,
+                        y: 4
+                    }
+                }
+            );
+
+            sign.dialogue
+                .setOrigin(0.5)
+                .setVisible(false)
+                .setDepth(100);
+        });
+
+        this.physics.add.overlap(
+            this.player,
+            this.signs,
+            this.readSign,
+            null,
+            this
+        );
+    }
+
+    readSign(player, sign) {
+        sign.dialogue.setVisible(true);
+    }
+
+    hitWater(player, tile) {
+        this.loseHealth();
     }
 
     loseHealth() {
@@ -55,9 +101,7 @@ class Platformer extends Phaser.Scene {
 
         this.health--;
 
-        if (this.hearts[this.health]) {
-            this.hearts[this.health].setVisible(false);
-        }
+        this.healthText.setText('❤'.repeat(this.health));
 
         this.player.setVelocityY(-300);
         this.cameras.main.flash(200, 255, 0, 0);
@@ -75,7 +119,7 @@ class Platformer extends Phaser.Scene {
     }
 
     respawnPlayer() {
-        this.player.setPosition(30, 345);
+        this.player.setPosition(30, 200);
         this.player.setVelocity(0, 0);
 
         this.invulnerable = true;
@@ -133,6 +177,8 @@ class Platformer extends Phaser.Scene {
         this.secretLayer = this.map.createLayer("Secret-Paths", [tilesetFarm]);
         this.waterLayer = this.map.createLayer("WaterLayer", [tilesetTiles]);
 
+        this.waterLayer.setCollisionByProperty({ water: true });
+
         this.backgroundLayer.setDepth(0);
         this.decorationLayer.setDepth(1);
         this.groundLayer.setDepth(2);
@@ -145,20 +191,6 @@ class Platformer extends Phaser.Scene {
         this.groundLayer.setCollisionByExclusion([-1]);
 
         this.physics.world.setBounds(0, 0, this.map.widthInPixels, this.map.heightInPixels);
-    }
-
-    createWater(){
-        this.waterObjects = this.map.getObjectLayer('water').objects;
-
-        this.waterZones = this.physics.add.staticGroup();
-
-        this.waterObjects.forEach(obj => {
-            const zone = this.add.rectangle(obj.x, obj.y, obj.width, obj.height, 0x0000ff, 0);
-
-            this.physics.add.existing(zone, true);
-
-            this.waterZones.add(zone);
-        });
     }
 
     createCollectibles(){
@@ -217,6 +249,23 @@ class Platformer extends Phaser.Scene {
 
         this.physics.add.collider(this.player, this.groundLayer);
         this.player.setDepth(10);
+
+        //health
+        this.healthText = this.add.text(
+        this.player.x,
+        this.player.y-25,
+        `❤❤❤`,
+        {
+            fontSize: '10px',
+            color: '#a82323',
+            stroke: '#000000',
+            strokeThickness: 3
+        }
+
+    );
+
+    this.healthText.setOrigin(0.5);
+    this.healthText.setDepth(1000);
     }
 
     createControls() {
@@ -245,13 +294,6 @@ class Platformer extends Phaser.Scene {
         this.cameras.main.setDeadzone(100, 100);
         this.cameras.main.setZoom(this.SCALE);
         this.cameras.main.roundPixels = true;
-    }
-
-    createDebugToggle() {
-        this.input.keyboard.on("keydown-D", () => {
-            this.physics.world.drawDebug = !this.physics.world.drawDebug;
-            this.physics.world.debugGraphic.clear();
-        }, this);
     }
 
     update() {
@@ -285,5 +327,19 @@ class Platformer extends Phaser.Scene {
         if (Phaser.Input.Keyboard.JustDown(this.rKey)) {
             this.scene.restart();
         }
+
+        this.signs.getChildren().forEach(sign => {
+
+        const overlapping = Phaser.Geom.Intersects.RectangleToRectangle(
+                this.player.getBounds(),
+                sign.getBounds()
+            );
+
+            sign.dialogue.setVisible(overlapping);
+        });
+        this.healthText.setPosition(
+            this.player.x,
+            this.player.y - 25
+        );
     }
 }
