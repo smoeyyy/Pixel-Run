@@ -25,6 +25,7 @@ class Platformer extends Phaser.Scene {
         this.createAnimations();
         this.createWalkParticles();
         this.createSigns();
+        this.createDeathScreen();
         this.add.text(50, 150, "ARROW KEYS TO MOVE\nR TO RESTART", {
             fontSize: '12px',
             fill: '#000000'
@@ -36,6 +37,19 @@ class Platformer extends Phaser.Scene {
             null,
             this
         );
+        this.jumpSound = this.sound.add('jumpSound');
+
+        this.fadeOverlay = this.add.rectangle(
+            0,
+            0,
+            this.scale.width,
+            this.scale.height,
+            0x000000,
+            0
+        ).setOrigin(0);
+
+        this.fadeOverlay.setScrollFactor(0);
+        this.fadeOverlay.setDepth(100000);
     }
 
     createSigns() {
@@ -133,7 +147,43 @@ class Platformer extends Phaser.Scene {
         this.physics.pause();
         this.player.setTint(0xff0000);
 
-        console.log("Game Over");
+        this.tweens.add({
+            targets: this.fadeOverlay,
+            alpha: 1,
+            duration: 800,
+            onComplete: () => {
+                this.deathScreen.setVisible(true);
+            }
+        });
+    }
+
+    createDeathScreen() {
+        this.deathScreen = this.add.container(0, 0);
+        this.deathScreen.setDepth(99999);
+        this.deathScreen.setScrollFactor(0);
+
+        const bg = this.add.rectangle(
+            0,
+            0,
+            this.scale.width,
+            this.scale.height,
+            0x000000,
+            0.7
+        ).setOrigin(0);
+
+        const text = this.add.text(
+            this.scale.width / 2,
+            this.scale.height / 2,
+            "YOU DIED\nPress R to Restart",
+            {
+                fontSize: '32px',
+                color: '#ffffff',
+                align: 'center'
+            }
+        ).setOrigin(0.5);
+
+        this.deathScreen.add([bg, text]);
+        this.deathScreen.setVisible(false);
     }
 
     createAnimations() {
@@ -274,18 +324,35 @@ class Platformer extends Phaser.Scene {
     }
 
     createWalkParticles() {
+
+        // Ground movement particles
         this.walkEmitter = this.add.particles(0, 0, "particle_smoke", {
             frame: [10, 11, 12, 13, 14],
-            scale: { start: 0.05, end: 0.01 },
+            scale: { start: 0.1, end: 0.01 },
             speed: { min: 20, max: 80 },
             lifespan: 800,
-            alpha: { start: 0.9, end: 0 },
+            alpha: { start: 0.8, end: 0 },
             quantity: 1,
-            frequency: 120,
+            frequency: 100,
             follow: this.player,
             followOffset: { x: 0, y: 22 }
         });
+
+        // Air/jump particles
+        this.jumpEmitter = this.add.particles(0, 0, "particle_smoke", {
+            frame: [2, 3],
+            scale: { start: 0.07, end: 0 },
+            speed: { min: 10, max: 30 },
+            lifespan: 300,
+            alpha: { start: 0.5, end: 0 },
+            quantity: 1,
+            frequency: 80,
+            follow: this.player,
+            followOffset: { x: 0, y: 10 }
+        });
+
         this.walkEmitter.stop();
+        this.jumpEmitter.stop();
     }
 
     createCamera() {
@@ -298,6 +365,22 @@ class Platformer extends Phaser.Scene {
 
     update() {
         const onGround = this.player.body.onFloor();
+        const movingHorizontally = this.cursors.left.isDown || this.cursors.right.isDown;
+        const movingVertically = !onGround;
+
+        // Horizontal movement particles
+        if (movingHorizontally && onGround) {
+            this.walkEmitter.start();
+        } else {
+            this.walkEmitter.stop();
+        }
+
+        // Vertical movement particles
+        if (movingVertically) {
+            this.jumpEmitter.start();
+        } else {
+            this.jumpEmitter.stop();
+        }
 
         if (this.cursors.left.isDown) {
             this.player.setAccelerationX(-this.ACCELERATION);
@@ -322,6 +405,7 @@ class Platformer extends Phaser.Scene {
 
         if (onGround && Phaser.Input.Keyboard.JustDown(this.cursors.up)) {
             this.player.setVelocityY(this.JUMP_VELOCITY);
+            this.jumpSound.play();
         }
 
         if (Phaser.Input.Keyboard.JustDown(this.rKey)) {
