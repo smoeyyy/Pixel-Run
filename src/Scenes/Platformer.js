@@ -11,17 +11,85 @@ class Platformer extends Phaser.Scene {
         this.JUMP_VELOCITY = -600;
         this.PARTICLE_VELOCITY = 50;
         this.SCALE = 2.0;
+        this.MAX_HEALTH = 3;
+        this.health = this.MAX_HEALTH;
+        this.invulnerable = false;
     }
 
     create() {
         this.createMap();
         this.createPlayer();
+        this.createWater();
         this.createCollectibles();
+        this.createCamera();
+        this.createHealthUI();
         this.createControls();
         this.createAnimations();
         this.createWalkParticles();
-        this.createCamera();
         this.createDebugToggle();
+        this.physics.add.overlap(
+            this.player,
+            this.waterZones,
+            this.hitWater,
+            null,
+            this
+        );
+    }
+
+    createHealthUI() {
+        this.hearts = [];
+
+        for (let i = 0; i < this.MAX_HEALTH; i++) {
+            const heart = this.add.image(50 + (i * 50), 40, 'heart');
+            heart.setScrollFactor(0);
+            heart.setDepth(1000);
+            heart.setScale(2.0);
+            this.hearts.push(heart);
+        }
+    }
+
+    loseHealth() {
+        if (this.invulnerable) return;
+
+        this.invulnerable = true;
+
+        this.health--;
+
+        if (this.hearts[this.health]) {
+            this.hearts[this.health].setVisible(false);
+        }
+
+        this.player.setVelocityY(-300);
+        this.cameras.main.flash(200, 255, 0, 0);
+
+        if (this.health <= 0) {
+            this.gameOver();
+            return;
+        }
+
+        this.respawnPlayer();
+
+        this.time.delayedCall(1000, () => {
+            this.invulnerable = false;
+        });
+    }
+
+    respawnPlayer() {
+        this.player.setPosition(30, 345);
+        this.player.setVelocity(0, 0);
+
+        this.invulnerable = true;
+
+        this.time.delayedCall(800, () => {
+            this.invulnerable = false;
+        });
+    }
+
+    gameOver() {
+        this.physics.pause();
+        this.player.setTint(0xff0000);
+
+        console.log("Game Over");
     }
 
     createAnimations() {
@@ -63,6 +131,7 @@ class Platformer extends Phaser.Scene {
         this.decorationLayer = this.map.createLayer("Decorations", [tilesetBackgrounds, tilesetTiles, tilesetFarm]);
         this.groundLayer = this.map.createLayer("Ground-n-Platformers", [tilesetTiles, tilesetFarm]);
         this.secretLayer = this.map.createLayer("Secret-Paths", [tilesetFarm]);
+        this.waterLayer = this.map.createLayer("WaterLayer", [tilesetTiles]);
 
         this.backgroundLayer.setDepth(0);
         this.decorationLayer.setDepth(1);
@@ -76,6 +145,20 @@ class Platformer extends Phaser.Scene {
         this.groundLayer.setCollisionByExclusion([-1]);
 
         this.physics.world.setBounds(0, 0, this.map.widthInPixels, this.map.heightInPixels);
+    }
+
+    createWater(){
+        this.waterObjects = this.map.getObjectLayer('water').objects;
+
+        this.waterZones = this.physics.add.staticGroup();
+
+        this.waterObjects.forEach(obj => {
+            const zone = this.add.rectangle(obj.x, obj.y, obj.width, obj.height, 0x0000ff, 0);
+
+            this.physics.add.existing(zone, true);
+
+            this.waterZones.add(zone);
+        });
     }
 
     createCollectibles(){
@@ -143,15 +226,15 @@ class Platformer extends Phaser.Scene {
 
     createWalkParticles() {
         this.walkEmitter = this.add.particles(0, 0, "particle_smoke", {
-            frame: [0, 1],
-            scale: { start: 0.15, end: 0.3 },
-            speed: { min: 10, max: 50 },
-            lifespan: 350,
-            alpha: { start: 1, end: 0 },
+            frame: [10, 11, 12, 13, 14],
+            scale: { start: 0.05, end: 0.01 },
+            speed: { min: 20, max: 80 },
+            lifespan: 800,
+            alpha: { start: 0.9, end: 0 },
             quantity: 1,
             frequency: 120,
             follow: this.player,
-            followOffset: { x: 0, y: 18 }
+            followOffset: { x: 0, y: 22 }
         });
         this.walkEmitter.stop();
     }

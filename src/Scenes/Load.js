@@ -11,15 +11,16 @@ class Load extends Phaser.Scene {
         this.load.image("pixel-platformer", "platformer_tilemap_packed.png");
         this.load.image("farm-expansion", "farm_tilemap_packed.png");
         this.load.image("pixel-platformer-backgrounds", "tilemap-backgrounds_packed.png");
-        this.load.spritesheet("particle_smoke", "platformer_tilemap_packed.png", {
-            frameWidth: 18,
-            frameHeight: 18
+        this.load.spritesheet("particle_smoke", "kenny-particles-2.png", {
+            frameWidth: 512,
+            frameHeight: 512
         });
         this.load.tilemapTiledJSON("platformer-level-1", "platformer-level-1.tmj");
         this.load.spritesheet('coin', 'pumpkin.png', {
             frameWidth: 18,
             frameHeight: 18
         });
+        this.load.image('heart', 'heart.png');
     }
 
     create() {
