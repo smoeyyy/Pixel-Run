@@ -13,11 +13,11 @@
             "scaleInDock": 1
         },
         "platformer-level-1.tmj": {
-            "scale": 1.5,
-            "selectedLayer": 0,
+            "scale": 1,
+            "selectedLayer": 3,
             "viewCenter": {
-                "x": 565,
-                "y": 418
+                "x": 3486.5,
+                "y": 334
             }
         },
         "platformer-level-1.tmj#farm-expansion": {

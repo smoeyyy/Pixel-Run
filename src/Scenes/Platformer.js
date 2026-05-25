@@ -8,12 +8,14 @@ class Platformer extends Phaser.Scene {
         this.ACCELERATION = 400;
         this.DRAG = 1000;    // DRAG < ACCELERATION = icy slide
         this.physics.world.gravity.y = 1500;
-        this.JUMP_VELOCITY = -600;
+        this.JUMP_VELOCITY = -400;
         this.PARTICLE_VELOCITY = 50;
         this.SCALE = 2.0;
         this.MAX_HEALTH = 3;
         this.health = this.MAX_HEALTH;
         this.invulnerable = false;
+        this.MAX_JUMPS = 2;
+        this.jumpsRemaining = this.MAX_JUMPS;
     }
 
     create() {
@@ -365,6 +367,11 @@ class Platformer extends Phaser.Scene {
 
     update() {
         const onGround = this.player.body.onFloor();
+        if (onGround && !this.wasOnGround) {
+            this.jumpsRemaining = this.MAX_JUMPS;
+        }
+
+        this.wasOnGround = onGround;
         const movingHorizontally = this.cursors.left.isDown || this.cursors.right.isDown;
         const movingVertically = !onGround;
 
@@ -403,8 +410,9 @@ class Platformer extends Phaser.Scene {
             this.player.anims.play("jump", true);
         }
 
-        if (onGround && Phaser.Input.Keyboard.JustDown(this.cursors.up)) {
+        if (Phaser.Input.Keyboard.JustDown(this.cursors.up) && this.jumpsRemaining > 0) {
             this.player.setVelocityY(this.JUMP_VELOCITY);
+            this.jumpsRemaining--;
             this.jumpSound.play();
         }
 
